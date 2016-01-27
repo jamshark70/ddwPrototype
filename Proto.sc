@@ -99,7 +99,8 @@ Proto {
 
 	update { arg ... args;
 		var result;
-		this.use({ result = ~update.valueArray(args); });
+		// true = allow silent failure if the Proto has already been freed
+		this.use({ result = ~update.valueArray(args); }, true);
 		^result
 	}
 
@@ -137,33 +138,45 @@ Proto {
 		^result
 	}
 
-	use { arg func;
+	use { arg func, failSilentlyAfterFree = false;
 		var result, saveEnvir;
-		saveEnvir = currentEnvironment;
-		currentEnvironment = this;
-		protect {
-			result = func.value;
-		} {
-			currentEnvironment = saveEnvir;
-		};
-		^result
-	}
-
-	make { arg func;
-		var saveEnvir;
-		protect {
+		if(env.notNil) {
 			saveEnvir = currentEnvironment;
 			currentEnvironment = this;
-			func.value;
-			currentEnvironment = saveEnvir;
+			protect {
+				result = func.value;
+			} {
+				currentEnvironment = saveEnvir;
+			};
+			^result
 		} {
-			currentEnvironment = saveEnvir;
+			if(failSilentlyAfterFree.not) {
+				MethodError("Can't call 'use' after Proto was freed", this).throw
+			} { ^nil };
+		};
+	}
+
+	make { arg func, failSilentlyAfterFree = false;
+		var saveEnvir;
+		if(env.notNil) {
+			protect {
+				saveEnvir = currentEnvironment;
+				currentEnvironment = this;
+				func.value;
+				currentEnvironment = saveEnvir;
+			} {
+				currentEnvironment = saveEnvir;
+			};
+		} {
+			if(failSilentlyAfterFree.not) {
+				MethodError("Can't call 'make' after Proto was freed", this).throw
+			};
 		};
 		^this
 	}
 
 	free { arg ... args;
-		this.use({ ~free.valueArray(args) });
+		this.use({ ~free.valueArray(args) }, true);  // do not throw error if you free twice
 		env = nil;
 	}
 
