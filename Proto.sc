@@ -44,6 +44,8 @@ Proto {
 		// myAdhoc.import((myOtherAdhoc: #[key1, key2]))
 	import { |objectKeyDict, parentKeys|
 		var obj2;
+		// without this, importing into an instance corrupts the class proto
+		env.parent = IdentityDictionary(parent: env.parent);
 		objectKeyDict.keysValuesDo({ |obj, keysToImport|
 			(obj2 = obj.asProtoImportable).notNil.if({
 				keysToImport.do({ |key|
