@@ -3,7 +3,15 @@
 	// environment safety: asynchronous functions don't remember
 	// the environment - scheduled funcs, OSCresponders, etc.
 	// this is an easy way to make an environment-safe function
-	e { ^this.inEnvir }
+	// BUT... I used to have a shortcut 'e':
+	// Canonical way: inEnvir { ... }
+	// Shortcut way: e { ... }
+	// But I got burned by this a lot of times with students,
+	// who didn't have this extension. So I'm deprecating it.
+	e {
+		DeprecatedError(this, thisMethod, this.class.findMethod('inEnvir'), this.class).reportError;
+		^this.inEnvir  // don't halt, and I want to be in control of the return
+	}
 }
 
 	// in Proto, parent should contain all functions; all data should go in main dict
