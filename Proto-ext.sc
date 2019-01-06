@@ -9,8 +9,13 @@
 	// But I got burned by this a lot of times with students,
 	// who didn't have this extension. So I'm deprecating it.
 	e {
-		DeprecatedError(this, thisMethod, this.class.findMethod('inEnvir'), this.class).reportError;
-		^this.inEnvir  // don't halt, and I want to be in control of the return
+		var err = DeprecatedError(this, thisMethod, this.class.findRespondingMethodFor('inEnvir'), this.class);
+		if(Error.debug) {
+			err.throw;
+		} {
+			err.reportError;
+		};
+		^this.inEnvir  // if not 'debug', don't halt, and I want to be in control of the return
 	}
 }
 
